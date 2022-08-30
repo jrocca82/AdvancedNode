@@ -1,5 +1,7 @@
 const Router = require("express").Router(),
-	User = require("../Models/user.js");
+	User = require("../Models/user.js"),
+	bcrypt = require("bcryptjs"),
+	salt = bcrypt.genSaltSync(10);
 
 Router.get("/index", (req, res) => {
 	User.find({}).exec((error, users) => {
@@ -14,7 +16,7 @@ Router.get("/index", (req, res) => {
 Router.post("/new", (req, res) => {
 	let newuser = new User();
 	newuser.username = req.body.username;
-	newuser.password = req.body.password;
+	newuser.password = bcrypt.hashSync(req.body.password, salt);
 
 	newuser.save((error, user) => {
 		if (error) {
@@ -28,11 +30,10 @@ Router.post("/new", (req, res) => {
 
 Router.post("/login", (req, res) => {
 	User.find({
-		username: req.body.username,
-		password: req.body.password
+		username: req.body.username
 	}), (error, theuser) => {
-		if(theuser){
-			req.session.user = theuser;
+		if(bcrypt.compareSync(req.body.password, theuser[0].password)) {
+			req.session.localUser = theuser;
 			res.redirect("/profile");
 		}
 	}
