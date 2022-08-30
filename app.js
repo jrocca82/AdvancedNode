@@ -8,28 +8,40 @@ const express = require("express"),
 	User = require("./Models/user.js"),
 	UserRoutes = require("./Controllers/userroutes.js"),
 	bodyParser = require("body-parser"),
-    ejs= require("ejs");
+	ejs = require("ejs"),
+	session = require("express-session"),
+	passport = require("passport"),
+	facebookRoutes = require("./Controllers/authentication.js"),
+	facebookAuth = require("./Controllers/facebook.js"),
+	key = require("./key.js");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+mongoose.connect(myDb);
+
+app.use(session({ secret: key.secret, resave: true, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 
-app.get("/profile", (req, res) => {
-    let user = {
-        name: "Sam",
-        img: "https://img.freepik.com/premium-vector/beautiful-fairy-flying-illustration_96037-627.jpg",
-        // friends: ["Jo", "Lorenzo", "Jasmin"]
-    }
-    res.render("profile", {user: user});
-});
-
 app.get("/", (req, res) => {
-    res.render("home");
+	res.render("home");
 });
 
-mongoose.connect(myDb);
+app.use("/auth/facebook", facebookRoutes);
+
+app.get("/profile", (req, res) => {
+    if(req.user) {
+        res.render("profile", { user: req.user });
+    } else if (req.session.user) {
+        res.render("profile", { user: req.session.user });
+    } else {
+        res.redirect("/")
+    }
+});
 
 app.use("/user", UserRoutes);
 

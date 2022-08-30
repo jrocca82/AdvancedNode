@@ -15,16 +15,28 @@ Router.post("/new", (req, res) => {
 	let newuser = new User();
 	newuser.username = req.body.username;
 	newuser.password = req.body.password;
-	newuser.isOver21 = req.body.isOver21;
 
 	newuser.save((error, user) => {
 		if (error) {
 			res.send(error);
 		} else {
-			res.send(user);
+			req.session.user = newuser;
+			res.redirect("/profile")
 		}
 	});
 });
+
+Router.post("/login", (req, res) => {
+	User.find({
+		username: req.body.username,
+		password: req.body.password
+	}), (error, theuser) => {
+		if(theuser){
+			req.session.user = theuser;
+			res.redirect("/profile");
+		}
+	}
+})
 
 Router.put("/update/:id", (req, res) => {
 	User.findById(req.params.id, (error, user) => {
@@ -33,7 +45,6 @@ Router.put("/update/:id", (req, res) => {
 		} else {
 			user.username = req.body.username || user.username;
 			user.password = req.body.password || user.password;
-			user.isOver21 = req.body.isOver21 || user.isOver21;
             user.save((error, user) => {
                 if(error) {
                     res.send(error);

@@ -9,11 +9,11 @@ let UserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true
+        required: false //required for local users only
     },
-    isOver21: {
-        type: Boolean,
-        required: false
+    facebookid: {
+        type: String,
+        required: false //required for facebook users only
     }
 });
 
